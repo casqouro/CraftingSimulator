@@ -2,7 +2,6 @@ package com.mygdx.game;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.Color;
@@ -10,6 +9,8 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
+import java.util.LinkedList;
+import java.util.Random;
 
 // investigate disabling continuous rendering
 // investigate game loops
@@ -23,18 +24,21 @@ Right now it's looping through and checking 100 things, 97 of which are empty!
 */
 
 public class CraftingSimulator extends ApplicationAdapter {
-	SpriteBatch batch;   
-        ShapeRenderer jack;
+        ShapeRenderer jack;	
+        SpriteBatch batch;   
         
         int fieldSizeX;
         int fieldSizeY;
         int[][] gameBoard = new int[fieldSizeX][fieldSizeY];      
-        int playerX = 5;
-        int playerY = 5;        
+        int playerX;
+        int playerY;        
         int height;
         int width;
         int heightSpacing;
        	int widthSpacing;
+        LinkedList gameObjects;
+        
+        boolean simpleState = false;
         
 	@Override
 	public void create () {
@@ -52,10 +56,30 @@ public class CraftingSimulator extends ApplicationAdapter {
             width = Gdx.graphics.getWidth();      
             heightSpacing = height / fieldSizeY;
             widthSpacing = width / fieldSizeX;
+            gameObjects = new LinkedList();
             
-            gameBoard[1][1] = 2;
-            gameBoard[3][9] = 3;
+            //gameBoard[1][1] = 2;
+            //gameBoard[3][9] = 3;
 	}
+        
+        // need to have some sort of state so this only happens once during the render cycle
+        // otherwise it's going to call generateResources() like a fucking madman, constantly
+        private void generateResources() {
+            int fieldSize = fieldSizeX * fieldSizeY;            
+            int quantity = fieldSize / 10;                      
+            int number;
+            Random ran = new Random();
+            
+            for (int a = 0; a < quantity; a++) {                
+                number = ran.nextInt(fieldSize);
+                                
+                if (gameBoard[number / fieldSizeX][number % fieldSizeY] == 0) {
+                    gameBoard[number / fieldSizeX][number % fieldSizeY] = ran.nextInt(2) + 2; // 2-3
+                }
+            }
+            
+            simpleState = true;
+        }
         
         private void drawResources() {
             jack.begin(ShapeType.Filled);
@@ -102,6 +126,9 @@ public class CraftingSimulator extends ApplicationAdapter {
             Gdx.gl.glClearColor(0, 0, 0, 0);
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT); 
                 
+            if (!simpleState) {
+                generateResources();
+            }
             drawResources();
             drawPlayer();
             drawField();
