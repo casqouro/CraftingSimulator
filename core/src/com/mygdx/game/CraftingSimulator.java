@@ -29,7 +29,8 @@ public class CraftingSimulator extends ApplicationAdapter {
         
         int fieldSizeX;
         int fieldSizeY;
-        int[][] gameBoard = new int[fieldSizeX][fieldSizeY];      
+        int[][] gameBoard = new int[fieldSizeX][fieldSizeY];    
+        int[] inventory = new int[5];
         int playerX;
         int playerY;        
         int height;
@@ -57,9 +58,6 @@ public class CraftingSimulator extends ApplicationAdapter {
             heightSpacing = height / fieldSizeY;
             widthSpacing = width / fieldSizeX;
             gameObjects = new LinkedList();
-            
-            //gameBoard[1][1] = 2;
-            //gameBoard[3][9] = 3;
 	}
         
         // need to have some sort of state so this only happens once during the render cycle
@@ -121,6 +119,19 @@ public class CraftingSimulator extends ApplicationAdapter {
             jack.end();            
         }
         
+        private void movePlayer(int x, int y) {
+            playerX += x;
+            playerY += y;
+            
+            int resourceValue = gameBoard[playerX][playerY];
+            
+            // if the player is implemented with this array, setting it to 0 could be bad!)
+            if (resourceValue != 0) {
+                inventory[resourceValue] += 1;
+                gameBoard[playerX][playerY] = 0;
+            }
+        }
+        
 	@Override
 	public void render () {            
             Gdx.gl.glClearColor(0, 0, 0, 0);
@@ -145,25 +156,34 @@ public class CraftingSimulator extends ApplicationAdapter {
                     case Keys.W:
                     case Keys.UP:
                         if (playerY + 1 < fieldSizeY) {
-                            playerY += 1; }
+                            movePlayer(0, 1); }
                         break;
                     case Keys.A:
                     case Keys.LEFT:
                         if (playerX - 1 >= 0) {
-                            playerX -= 1; }
+                            movePlayer(-1, 0); }
                         break;
                     case Keys.S:
                     case Keys.DOWN:
                         if (playerY - 1 >= 0) {
-                            playerY -= 1; }          
+                            movePlayer(0, -1); }          
                         break;
                     case Keys.D:
                     case Keys.RIGHT:
                         if (playerX + 1 < fieldSizeX) {
-                            playerX += 1; }
+                            movePlayer(1, 0); }
                         break;
                 }
                 return true;
             }
         }
 }
+
+/* UPGRADES
+
+   * Holding keys to move
+   * Pointing with the mouse to auto-move to a location
+   * Being able to store more types of resources
+   * Being able to store more of each type of resource
+   * Graphical upgrades
+*/
