@@ -6,6 +6,7 @@ import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
@@ -26,6 +27,7 @@ Right now it's looping through and checking 100 things, 97 of which are empty!
 public class CraftingSimulator extends ApplicationAdapter {
         ShapeRenderer jack;	
         SpriteBatch batch;   
+        BitmapFont font;
         
         int fieldSizeX;
         int fieldSizeY;
@@ -40,6 +42,7 @@ public class CraftingSimulator extends ApplicationAdapter {
         LinkedList gameObjects;
         
         boolean simpleState = false;
+        //boolean resourceInventoryState = true; // well, the values used when rendering would differ based on true/false
         
 	@Override
 	public void create () {
@@ -47,16 +50,17 @@ public class CraftingSimulator extends ApplicationAdapter {
             Gdx.input.setInputProcessor(processor);
            
             jack = new ShapeRenderer();
-            batch = new SpriteBatch();            
+            batch = new SpriteBatch();    
+            font = new BitmapFont();
             fieldSizeX = 10;
             fieldSizeY = 10;
             gameBoard = new int[fieldSizeX][fieldSizeY];
             playerX = 0;
             playerY = 0;
             height = Gdx.graphics.getHeight();
-            width = Gdx.graphics.getWidth();      
+            width = Gdx.graphics.getWidth();   
             heightSpacing = height / fieldSizeY;
-            widthSpacing = width / fieldSizeX;
+            widthSpacing = (width - 128) / fieldSizeX;
             gameObjects = new LinkedList();
 	}
         
@@ -107,18 +111,28 @@ public class CraftingSimulator extends ApplicationAdapter {
             jack.begin(ShapeType.Line);
             jack.setColor(Color.WHITE);
             
+            // this draws the vertical lines
             for (int col = 0; col < fieldSizeX; col++) {
-                jack.line(col * width/fieldSizeX, 0, 
-                          col * width/fieldSizeX, height);
+                jack.line((col * (width - 128))/fieldSizeX, 0, 
+                          (col * (width - 128))/fieldSizeX, height);
             }
-            
+            // this draws the horizontal lines
             for (int row = 0; row < fieldSizeY; row++) {
                 jack.line(0, row * height/fieldSizeY,
-                          width, row * height/fieldSizeY);
-            }                                 
+                          width - 129, row * height/fieldSizeY); // 129, instead of 128?  Has to do with drawing the lines/resources.
+            }  
             jack.end();            
         }
         
+        public void drawResourceInterface() {
+            // 640 by 480
+            // so 140 by 480?
+            jack.begin(ShapeType.Line);
+            jack.setColor(Color.WHITE);
+            jack.line(511, 0, 511, 480); // When set to 512, instead of 511, there was a one pixel gap when drawing resources.  Why?
+            jack.end();   
+        }
+                
         private void movePlayer(int x, int y) {
             playerX += x;
             playerY += y;
@@ -136,15 +150,19 @@ public class CraftingSimulator extends ApplicationAdapter {
 	public void render () {            
             Gdx.gl.glClearColor(0, 0, 0, 0);
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT); 
-                
+            
             if (!simpleState) {
                 generateResources();
             }
             drawResources();
+            drawResourceInterface();            
             drawPlayer();
             drawField();
-                        
+            
             batch.begin();
+            for (int a = 0; a < inventory.length; a++) {
+                font.draw(batch, "HEYA: " + inventory[a], 522, 48 * (a + 2));
+            }
             batch.end();
 	}
         
@@ -178,6 +196,12 @@ public class CraftingSimulator extends ApplicationAdapter {
             }
         }
 }
+
+/* FEATURE REQUESTS...
+
+    * Toggle the resource screen
+    * Regenerate resources
+*/
 
 /* UPGRADES
 
