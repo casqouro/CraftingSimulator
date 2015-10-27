@@ -10,8 +10,6 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
-import java.util.LinkedList;
-import java.util.Random;
 
 // investigate disabling continuous rendering
 // investigate game loops
@@ -30,8 +28,7 @@ public class CraftingSimulator extends ApplicationAdapter {
         BitmapFont font;
         
         int fieldSizeX;
-        int fieldSizeY;
-        int[][] gameBoard = new int[fieldSizeX][fieldSizeY];    
+        int fieldSizeY;    
         int[] inventory = new int[5];
         int playerX;
         int playerY;        
@@ -40,9 +37,8 @@ public class CraftingSimulator extends ApplicationAdapter {
         int heightSpacing;
        	int widthSpacing;
         int inventorySizeOffset;
-        LinkedList gameObjects;
+        Map currentMap;
         
-        boolean simpleState = false;
         boolean resourceInventoryState = true; // well, the values used when rendering would differ based on true/false
         
 	@Override
@@ -55,7 +51,6 @@ public class CraftingSimulator extends ApplicationAdapter {
             font = new BitmapFont();
             fieldSizeX = 10;
             fieldSizeY = 10;
-            gameBoard = new int[fieldSizeX][fieldSizeY];
             playerX = 0;
             playerY = 0;
             height = Gdx.graphics.getHeight();
@@ -63,37 +58,18 @@ public class CraftingSimulator extends ApplicationAdapter {
             heightSpacing = height / fieldSizeY;
             widthSpacing = (width - 128) / fieldSizeX;
             inventorySizeOffset = 1;
-            gameObjects = new LinkedList();
+            currentMap = new Map(fieldSizeX, fieldSizeY);
 	}
-        
-        // need to have some sort of state so this only happens once during the render cycle
-        // otherwise it's going to call generateResources() like a fucking madman, constantly
-        private void generateResources() {
-            int fieldSize = fieldSizeX * fieldSizeY;            
-            int quantity = fieldSize / 10;                      
-            int number;
-            Random ran = new Random();
-            
-            for (int a = 0; a < quantity; a++) {                
-                number = ran.nextInt(fieldSize);
-                                
-                if (gameBoard[number / fieldSizeX][number % fieldSizeY] == 0) {
-                    gameBoard[number / fieldSizeX][number % fieldSizeY] = ran.nextInt(2) + 2; // 2-3
-                }
-            }
-            
-            simpleState = true;
-        }
         
         private void drawResources() {
             jack.begin(ShapeType.Filled);
             for (int a = 0; a < fieldSizeX; a++) {
                 for (int b = 0; b < fieldSizeY; b++) {
-                    if (gameBoard[a][b] == 2) {
+                    if (currentMap.mapBoard[a][b] == 2) {
                         jack.setColor(Color.GRAY);
                         jack.rect(a * widthSpacing, b * heightSpacing, widthSpacing, heightSpacing);
                     }
-                    if (gameBoard[a][b] == 3) {
+                    if (currentMap.mapBoard[a][b] == 3) {
                         jack.setColor(Color.BLUE);
                         jack.rect(a * widthSpacing, b * heightSpacing, widthSpacing, heightSpacing);
                     }
@@ -141,12 +117,13 @@ public class CraftingSimulator extends ApplicationAdapter {
             playerX += x;
             playerY += y;
             
-            int resourceValue = gameBoard[playerX][playerY];
+            int locationValue = currentMap.mapBoard[playerX][playerY];
             
             // if the player is implemented with this array, setting it to 0 could be bad!)
-            if (resourceValue != 0) {
-                inventory[resourceValue] += 1;
-                gameBoard[playerX][playerY] = 0;
+            if (locationValue != 0) {
+                inventory[locationValue] += 1;
+                currentMap.setHarvested(1);
+                currentMap.mapBoard[playerX][playerY] = 0;
             }
         }
         
@@ -167,9 +144,10 @@ public class CraftingSimulator extends ApplicationAdapter {
             Gdx.gl.glClearColor(0, 0, 0, 0);
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT); 
             
-            if (!simpleState) {
-                generateResources();
+            if (currentMap.needToGenerateResource()) {
+                currentMap.generateResources();
             }
+            
             drawResources();
             drawResourceInterface();            
             drawPlayer();
