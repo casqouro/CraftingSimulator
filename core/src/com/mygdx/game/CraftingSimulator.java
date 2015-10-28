@@ -4,9 +4,12 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputAdapter;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
@@ -25,6 +28,8 @@ Right now it's looping through and checking 100 things, 97 of which are empty!
 public class CraftingSimulator extends ApplicationAdapter {
         ShapeRenderer jack;	
         SpriteBatch batch;   
+        Texture ham;
+        Sprite hamSprite;
         BitmapFont font;
         
         int fieldSizeX;
@@ -47,7 +52,9 @@ public class CraftingSimulator extends ApplicationAdapter {
             Gdx.input.setInputProcessor(processor);
            
             jack = new ShapeRenderer();
-            batch = new SpriteBatch();    
+            batch = new SpriteBatch();   
+            ham = new Texture(new FileHandle("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\ham (1).png")); // C:\Users\Matthew\Desktop\CraftingSimulator\assets\ham
+            hamSprite = new Sprite(ham);
             font = new BitmapFont();
             fieldSizeX = 10;
             fieldSizeY = 10;
@@ -78,12 +85,14 @@ public class CraftingSimulator extends ApplicationAdapter {
             jack.end();
         }
         
+        /*
         private void drawPlayer() {
-            jack.begin(ShapeType.Filled);
+            jack.begin(ShapeType.Filled); 
             jack.setColor(Color.GREEN);
             jack.rect(playerX * widthSpacing, playerY * heightSpacing, widthSpacing, heightSpacing);
             jack.end();
         }
+        */
         
         private void drawField() {
             jack.begin(ShapeType.Line);
@@ -150,16 +159,17 @@ public class CraftingSimulator extends ApplicationAdapter {
             
             drawResources();
             drawResourceInterface();            
-            drawPlayer();
+            //drawPlayer();
             drawField();
             
+            batch.begin();
             if (resourceInventoryState) {
-                batch.begin();
                 for (int a = 0; a < inventory.length; a++) {
                     font.draw(batch, "HEYA: " + inventory[a], 522, 48 * (a + 2));
                 }
-                batch.end();
             }
+            batch.draw(hamSprite, playerX * widthSpacing, playerY * heightSpacing, 50, 50);
+            batch.end();
 	}
         
         private class KeyProcessor extends InputAdapter {
@@ -209,4 +219,11 @@ public class CraftingSimulator extends ApplicationAdapter {
    * Being able to store more types of resources
    * Being able to store more of each type of resource
    * Graphical upgrades
+*/
+
+/* Lessons Learned
+
+   LIBGDX:
+    1) Textures have a fixed height/width and can't be scaled up, but a sprite
+        can be scaled up very easily.
 */
