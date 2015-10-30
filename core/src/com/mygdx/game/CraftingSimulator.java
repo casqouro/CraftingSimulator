@@ -8,9 +8,11 @@ import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 
@@ -31,6 +33,10 @@ public class CraftingSimulator extends ApplicationAdapter {
         Texture ham;
         Sprite hamSprite;
         BitmapFont font;
+        
+        TextureAtlas hamAtlas;
+        Animation hamAnim;
+        private float elapsedTime = 0;
         
         int fieldSizeX;
         int fieldSizeY;    
@@ -56,6 +62,8 @@ public class CraftingSimulator extends ApplicationAdapter {
             ham = new Texture(new FileHandle("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\ham (1).png")); // C:\Users\Matthew\Desktop\CraftingSimulator\assets\ham
             hamSprite = new Sprite(ham);
             font = new BitmapFont();
+            hamAtlas = new TextureAtlas(Gdx.files.internal("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\hamswalk.atlas"));
+            hamAnim = new Animation(1/6f, hamAtlas.getRegions());
             fieldSizeX = 10;
             fieldSizeY = 10;
             playerX = 0;
@@ -168,7 +176,9 @@ public class CraftingSimulator extends ApplicationAdapter {
                     font.draw(batch, "HEYA: " + inventory[a], 522, 48 * (a + 2));
                 }
             }
-            batch.draw(hamSprite, playerX * widthSpacing, playerY * heightSpacing, 50, 50);
+            //batch.draw(hamSprite, playerX * widthSpacing, playerY * heightSpacing, 50, 50);
+            elapsedTime += Gdx.graphics.getDeltaTime();
+            batch.draw(hamAnim.getKeyFrame(elapsedTime, true), playerX * widthSpacing, (playerY * heightSpacing) + 2, 50, 50);
             batch.end();
 	}
         
