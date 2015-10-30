@@ -51,6 +51,7 @@ public class CraftingSimulator extends ApplicationAdapter {
         Map currentMap;
         
         boolean resourceInventoryState = true; // well, the values used when rendering would differ based on true/false
+        boolean inputLockedState = false;
         
 	@Override
 	public void create () {
@@ -64,6 +65,7 @@ public class CraftingSimulator extends ApplicationAdapter {
             font = new BitmapFont();
             hamAtlas = new TextureAtlas(Gdx.files.internal("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\hamswalk.atlas"));
             hamAnim = new Animation(1/6f, hamAtlas.getRegions());
+            hamAnim.setPlayMode(Animation.PlayMode.NORMAL);
             fieldSizeX = 10;
             fieldSizeY = 10;
             playerX = 0;
@@ -92,15 +94,6 @@ public class CraftingSimulator extends ApplicationAdapter {
             }
             jack.end();
         }
-        
-        /*
-        private void drawPlayer() {
-            jack.begin(ShapeType.Filled); 
-            jack.setColor(Color.GREEN);
-            jack.rect(playerX * widthSpacing, playerY * heightSpacing, widthSpacing, heightSpacing);
-            jack.end();
-        }
-        */
         
         private void drawField() {
             jack.begin(ShapeType.Line);
@@ -158,60 +151,74 @@ public class CraftingSimulator extends ApplicationAdapter {
         
 	@Override
 	public void render () {            
-            Gdx.gl.glClearColor(0, 0, 0, 0);
+            //Gdx.gl.glClearColor(0, 0, 0, 0);
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT); 
             
+            batch.begin();
+                if (inputLockedState) {
+                     elapsedTime += Gdx.graphics.getDeltaTime();
+                     batch.draw(hamAnim.getKeyFrame(elapsedTime, true), playerX * widthSpacing, (playerY * heightSpacing) + 2, 50, 50);
+                     
+                    if (hamAnim.isAnimationFinished(elapsedTime)) {
+                        elapsedTime = 0;
+                        inputLockedState = false;
+                        //System.out.println(heightSpacing); 48
+                        //System.out.println(widthSpacing); 51                        
+                    }
+                } else {
+                    batch.draw(ham, playerX * widthSpacing, (playerY * heightSpacing) + 2, 50, 50);
+                }
+                 
+                if (resourceInventoryState) {
+                    for (int a = 0; a < inventory.length; a++) {
+                        font.draw(batch, "HEYA: " + inventory[a], 522, 48 * (a + 2));
+                    }
+                }                
+            batch.end();
+       
             if (currentMap.needToGenerateResource()) {
                 currentMap.generateResources();
             }
             
             drawResources();
             drawResourceInterface();            
-            //drawPlayer();
             drawField();
-            
-            batch.begin();
-            if (resourceInventoryState) {
-                for (int a = 0; a < inventory.length; a++) {
-                    font.draw(batch, "HEYA: " + inventory[a], 522, 48 * (a + 2));
-                }
-            }
-            //batch.draw(hamSprite, playerX * widthSpacing, playerY * heightSpacing, 50, 50);
-            elapsedTime += Gdx.graphics.getDeltaTime();
-            batch.draw(hamAnim.getKeyFrame(elapsedTime, true), playerX * widthSpacing, (playerY * heightSpacing) + 2, 50, 50);
-            batch.end();
 	}
         
         private class KeyProcessor extends InputAdapter {
             
             @Override
             public boolean keyDown(int keycode) {
-                switch (keycode) {
-                    case Keys.W:
-                    case Keys.UP:
-                        if (playerY + 1 < fieldSizeY) {
-                            movePlayer(0, 1); }
-                        break;
-                    case Keys.A:
-                    case Keys.LEFT:
-                        if (playerX - 1 >= 0) {
-                            movePlayer(-1, 0); }
-                        break;
-                    case Keys.S:
-                    case Keys.DOWN:
-                        if (playerY - 1 >= 0) {
-                            movePlayer(0, -1); }          
-                        break;
-                    case Keys.D:
-                    case Keys.RIGHT:
-                        if (playerX + 1 < fieldSizeX) {
-                            movePlayer(1, 0); }
-                        break;
-                    case Keys.I:
-                        fieldResizeUtility();
-                        break;
+                if (!inputLockedState) {
+                    switch (keycode) {
+                        case Keys.W:
+                        case Keys.UP:
+                            if (playerY + 1 < fieldSizeY) {
+                                movePlayer(0, 1); }
+                            break;
+                        case Keys.A:
+                        case Keys.LEFT:
+                            if (playerX - 1 >= 0) {
+                                movePlayer(-1, 0); }                                
+                            break;
+                        case Keys.S:
+                        case Keys.DOWN:
+                            if (playerY - 1 >= 0) {
+                                movePlayer(0, -1); }                                
+                            break;
+                        case Keys.D:
+                        case Keys.RIGHT:
+                            if (playerX + 1 < fieldSizeX) {
+                                movePlayer(1, 0); }                                
+                            break;
+                        case Keys.I:
+                            fieldResizeUtility();
+                            break;
+                    }  
+                    inputLockedState = true;
+                    return true;
                 }
-                return true;
+                return false;
             }
         }
 }
