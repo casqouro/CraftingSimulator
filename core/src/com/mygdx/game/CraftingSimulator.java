@@ -49,6 +49,7 @@ public class CraftingSimulator extends ApplicationAdapter {
        	int widthSpacing;
         int inventorySizeOffset;
         Map currentMap;
+        String direction;
         
         boolean resourceInventoryState = true; // well, the values used when rendering would differ based on true/false
         boolean inputLockedState = false;
@@ -149,21 +150,26 @@ public class CraftingSimulator extends ApplicationAdapter {
             }
         }
         
+        private float calcDrawPosition() {
+            elapsedTime += Gdx.graphics.getDeltaTime();
+            float nextDrawPosition = ((playerX-1) * widthSpacing) + (widthSpacing * (float) hamAnim.getKeyFrameIndex(elapsedTime) / hamAnim.getKeyFrames().length);
+            
+            return nextDrawPosition;
+        }
+        
 	@Override
 	public void render () {            
-            //Gdx.gl.glClearColor(0, 0, 0, 0);
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT); 
             
             batch.begin();
-                if (inputLockedState) {
-                     elapsedTime += Gdx.graphics.getDeltaTime();
-                     batch.draw(hamAnim.getKeyFrame(elapsedTime, true), playerX * widthSpacing, (playerY * heightSpacing) + 2, 50, 50);
+                if (inputLockedState) {  // (location * spacing) + (spacing * currentFrame / totalFrames)
+                    Enum fart = "UP";
+                    
+                    batch.draw(hamAnim.getKeyFrame(elapsedTime, true), calcDrawPosition(), (playerY * heightSpacing) + 2, 50, 50);
                      
                     if (hamAnim.isAnimationFinished(elapsedTime)) {
                         elapsedTime = 0;
-                        inputLockedState = false;
-                        //System.out.println(heightSpacing); 48
-                        //System.out.println(widthSpacing); 51                        
+                        inputLockedState = false;                    
                     }
                 } else {
                     batch.draw(ham, playerX * widthSpacing, (playerY * heightSpacing) + 2, 50, 50);
@@ -243,4 +249,14 @@ public class CraftingSimulator extends ApplicationAdapter {
    LIBGDX:
     1) Textures have a fixed height/width and can't be scaled up, but a sprite
         can be scaled up very easily.
+
+   JAVA:
+    1) float x = int a / int b ---> returns 0.  You must explicitly cast that
+        operation as FLOAT division, because otherwise it's INTEGER division,
+        regardless of the recipient variable being declared as a float.
+
+        The question becomes "Why not have automatic casts in Java?"  Answers
+        indicates that (a) this would violate type-safety, which is a feature of
+        the language, so casts much be EXPLICIT, and (b) it would move errors
+        from compile-time to run-time (some people like, some don't!)
 */
