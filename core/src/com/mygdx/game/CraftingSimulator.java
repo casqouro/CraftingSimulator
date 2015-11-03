@@ -13,6 +13,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 
@@ -30,7 +31,7 @@ Right now it's looping through and checking 100 things, 97 of which are empty!
 public class CraftingSimulator extends ApplicationAdapter {
         ShapeRenderer jack;	
         SpriteBatch batch;   
-        Texture ham;
+        TextureRegion ham;
         Sprite hamSprite;
         BitmapFont font;
         
@@ -61,7 +62,8 @@ public class CraftingSimulator extends ApplicationAdapter {
            
             jack = new ShapeRenderer();
             batch = new SpriteBatch();   
-            ham = new Texture(new FileHandle("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\ham (1).png")); // C:\Users\Matthew\Desktop\CraftingSimulator\assets\ham
+            ham = new TextureRegion(new Texture(new FileHandle("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\ham (1).png")));
+            //ham = new Texture(new FileHandle("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\ham (1).png")); // C:\Users\Matthew\Desktop\CraftingSimulator\assets\ham
             hamSprite = new Sprite(ham);
             font = new BitmapFont();
             hamAtlas = new TextureAtlas(Gdx.files.internal("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\hamswalk.atlas"));
@@ -69,8 +71,8 @@ public class CraftingSimulator extends ApplicationAdapter {
             hamAnim.setPlayMode(Animation.PlayMode.NORMAL);
             fieldSizeX = 10;
             fieldSizeY = 10;
-            playerX = 0;
-            playerY = 0;
+            playerX = 5;
+            playerY = 5;
             height = Gdx.graphics.getHeight();
             width = Gdx.graphics.getWidth();   
             heightSpacing = height / fieldSizeY;
@@ -123,7 +125,7 @@ public class CraftingSimulator extends ApplicationAdapter {
                 jack.end();
             }   
         }
-                
+            
         private void movePlayer(int x, int y) {
             playerX += x;
             playerY += y;
@@ -150,25 +152,67 @@ public class CraftingSimulator extends ApplicationAdapter {
             }
         }
         
-        private float calcDrawPosition() {
-            elapsedTime += Gdx.graphics.getDeltaTime();
-            float nextDrawPosition = ((playerX-1) * widthSpacing) + (widthSpacing * (float) hamAnim.getKeyFrameIndex(elapsedTime) / hamAnim.getKeyFrames().length);
-            
-            return nextDrawPosition;
-        }
-        
 	@Override
 	public void render () {            
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT); 
             
+            drawResources();
+            drawResourceInterface();            
+            drawField();            
+            
             batch.begin();
                 if (inputLockedState) {  // (location * spacing) + (spacing * currentFrame / totalFrames)
-                    Enum fart = "UP";
-                    
-                    batch.draw(hamAnim.getKeyFrame(elapsedTime, true), calcDrawPosition(), (playerY * heightSpacing) + 2, 50, 50);
+                    TextureRegion temp;
+                    float nextPosition;
+                    elapsedTime += Gdx.graphics.getDeltaTime();
+                    switch (direction) {
+                        case "W":
+                            break;
+                        case "A":
+                            temp = hamAnim.getKeyFrame(elapsedTime);
+                            nextPosition = (playerX * widthSpacing) - (widthSpacing * (float) hamAnim.getKeyFrameIndex(elapsedTime) / hamAnim.getKeyFrames().length);
+                            if (!temp.isFlipX()) {
+                                temp.flip(true, false);
+                            }
+                            batch.draw(temp, nextPosition, (playerY * heightSpacing) + 2, 50, 50);                           
+                            break;
+                        case "S":                            
+                            break;
+                        case "D":
+                            temp = hamAnim.getKeyFrame(elapsedTime);
+                            nextPosition = (playerX * widthSpacing) + (widthSpacing * (float) hamAnim.getKeyFrameIndex(elapsedTime) / hamAnim.getKeyFrames().length);
+                            if (temp.isFlipX()) {
+                                temp.flip(true, false);
+                            }               
+                            batch.draw(temp, nextPosition, (playerY * heightSpacing) + 2, 50, 50);
+                            System.out.println(playerX);
+                            break;
+                    }
                      
                     if (hamAnim.isAnimationFinished(elapsedTime)) {
                         elapsedTime = 0;
+                        
+                        switch (direction) {
+                        case "W": 
+                            movePlayer(0, 1);
+                            break;
+                        case "A":  
+                            if (!ham.isFlipX()) {
+                                ham.flip(true, false);
+                            }
+                            movePlayer(-1, 0);
+                            break;
+                        case "S":   
+                            movePlayer(0, -1);
+                            break;
+                        case "D": 
+                            movePlayer(1, 0);
+                            if (ham.isFlipX()) {
+                                ham.flip(true, false);
+                            }                             
+                            break;                            
+                        }
+                        
                         inputLockedState = false;                    
                     }
                 } else {
@@ -185,10 +229,6 @@ public class CraftingSimulator extends ApplicationAdapter {
             if (currentMap.needToGenerateResource()) {
                 currentMap.generateResources();
             }
-            
-            drawResources();
-            drawResourceInterface();            
-            drawField();
 	}
         
         private class KeyProcessor extends InputAdapter {
@@ -200,22 +240,22 @@ public class CraftingSimulator extends ApplicationAdapter {
                         case Keys.W:
                         case Keys.UP:
                             if (playerY + 1 < fieldSizeY) {
-                                movePlayer(0, 1); }
+                                direction = "W"; }
                             break;
                         case Keys.A:
                         case Keys.LEFT:
                             if (playerX - 1 >= 0) {
-                                movePlayer(-1, 0); }                                
+                                direction = "A"; }                                
                             break;
                         case Keys.S:
                         case Keys.DOWN:
                             if (playerY - 1 >= 0) {
-                                movePlayer(0, -1); }                                
+                                direction = "S"; }                                
                             break;
                         case Keys.D:
                         case Keys.RIGHT:
                             if (playerX + 1 < fieldSizeX) {
-                                movePlayer(1, 0); }                                
+                                direction = "D"; }                                
                             break;
                         case Keys.I:
                             fieldResizeUtility();
@@ -231,12 +271,9 @@ public class CraftingSimulator extends ApplicationAdapter {
 
 /* FEATURE REQUESTS...
     * Don't generate resource on current player location
-    * Toggle the resource screen
-    * Regenerate resources
 */
 
 /* UPGRADES
-
    * Holding keys to move
    * Pointing with the mouse to auto-move to a location
    * Being able to store more types of resources
@@ -249,6 +286,17 @@ public class CraftingSimulator extends ApplicationAdapter {
    LIBGDX:
     1) Textures have a fixed height/width and can't be scaled up, but a sprite
         can be scaled up very easily.
+
+    2) TextureRegion.flip(bool-for-x, bool-for-y) is permanent.  If you flip 
+        textureRegion's so you can animate to the left, you need to flip them
+        back when you decide to animate to the right again.
+
+        Also, it's a relative switch.  So using:
+        tr.flip(true, false) 
+        tr.flip(false, false) does not reverse the flip.
+
+        tr.flip(true, false)
+        tr.flip(true, false) is a full set of flips, back to the original.
 
    JAVA:
     1) float x = int a / int b ---> returns 0.  You must explicitly cast that
