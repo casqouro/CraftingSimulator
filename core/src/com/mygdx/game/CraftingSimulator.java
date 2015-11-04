@@ -32,11 +32,12 @@ public class CraftingSimulator extends ApplicationAdapter {
         ShapeRenderer jack;	
         SpriteBatch batch;   
         TextureRegion ham;
-        Sprite hamSprite;
         BitmapFont font;
         
         TextureAtlas hamAtlas;
         Animation hamAnim;
+        TextureAtlas hamWalkUpAtlas;
+        Animation hamWalkUpAnim;
         private float elapsedTime = 0;
         
         int fieldSizeX;
@@ -63,12 +64,13 @@ public class CraftingSimulator extends ApplicationAdapter {
             jack = new ShapeRenderer();
             batch = new SpriteBatch();   
             ham = new TextureRegion(new Texture(new FileHandle("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\ham (1).png")));
-            //ham = new Texture(new FileHandle("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\ham (1).png")); // C:\Users\Matthew\Desktop\CraftingSimulator\assets\ham
-            hamSprite = new Sprite(ham);
             font = new BitmapFont();
             hamAtlas = new TextureAtlas(Gdx.files.internal("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\hamswalk.atlas"));
             hamAnim = new Animation(1/6f, hamAtlas.getRegions());
             hamAnim.setPlayMode(Animation.PlayMode.NORMAL);
+            hamWalkUpAtlas = new TextureAtlas(Gdx.files.internal("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\hamwalkup.atlas"));            
+            hamWalkUpAnim = new Animation(1/4f, hamWalkUpAtlas.getRegions());
+            hamWalkUpAnim.setPlayMode(Animation.PlayMode.NORMAL);
             fieldSizeX = 10;
             fieldSizeY = 10;
             playerX = 5;
@@ -167,6 +169,9 @@ public class CraftingSimulator extends ApplicationAdapter {
                     elapsedTime += Gdx.graphics.getDeltaTime();
                     switch (direction) {
                         case "W":
+                            temp = hamWalkUpAnim.getKeyFrame(elapsedTime);
+                            nextPosition = (playerY * heightSpacing) + (heightSpacing * (float) hamWalkUpAnim.getKeyFrameIndex(elapsedTime) / hamWalkUpAnim.getKeyFrames().length);
+                            batch.draw(temp, (playerX * widthSpacing), nextPosition + 2, 50, 50);
                             break;
                         case "A":
                             temp = hamAnim.getKeyFrame(elapsedTime);
@@ -176,7 +181,10 @@ public class CraftingSimulator extends ApplicationAdapter {
                             }
                             batch.draw(temp, nextPosition, (playerY * heightSpacing) + 2, 50, 50);                           
                             break;
-                        case "S":                            
+                        case "S":    
+                            temp = hamAnim.getKeyFrame(elapsedTime);
+                            nextPosition = (playerY * heightSpacing) - (heightSpacing * (float) hamWalkUpAnim.getKeyFrameIndex(elapsedTime) / hamWalkUpAnim.getKeyFrames().length);
+                            batch.draw(temp, (playerX * widthSpacing), nextPosition + 2, 50, 50);
                             break;
                         case "D":
                             temp = hamAnim.getKeyFrame(elapsedTime);
@@ -185,7 +193,6 @@ public class CraftingSimulator extends ApplicationAdapter {
                                 temp.flip(true, false);
                             }               
                             batch.draw(temp, nextPosition, (playerY * heightSpacing) + 2, 50, 50);
-                            System.out.println(playerX);
                             break;
                     }
                      
@@ -200,16 +207,16 @@ public class CraftingSimulator extends ApplicationAdapter {
                             if (!ham.isFlipX()) {
                                 ham.flip(true, false);
                             }
-                            movePlayer(-1, 0);
+                            movePlayer(-1, 0);                            
                             break;
                         case "S":   
-                            movePlayer(0, -1);
+                            movePlayer(0, -1);                            
                             break;
                         case "D": 
-                            movePlayer(1, 0);
                             if (ham.isFlipX()) {
                                 ham.flip(true, false);
-                            }                             
+                            }     
+                            movePlayer(1, 0);                                                        
                             break;                            
                         }
                         
@@ -240,28 +247,32 @@ public class CraftingSimulator extends ApplicationAdapter {
                         case Keys.W:
                         case Keys.UP:
                             if (playerY + 1 < fieldSizeY) {
+                                inputLockedState = true;
                                 direction = "W"; }
                             break;
                         case Keys.A:
                         case Keys.LEFT:
                             if (playerX - 1 >= 0) {
+                                inputLockedState = true;                                
                                 direction = "A"; }                                
                             break;
                         case Keys.S:
                         case Keys.DOWN:
                             if (playerY - 1 >= 0) {
+                                inputLockedState = true;                                
                                 direction = "S"; }                                
                             break;
                         case Keys.D:
                         case Keys.RIGHT:
                             if (playerX + 1 < fieldSizeX) {
+                                inputLockedState = true;                                
                                 direction = "D"; }                                
                             break;
                         case Keys.I:
                             fieldResizeUtility();
                             break;
                     }  
-                    inputLockedState = true;
+                    //inputLockedState = true;
                     return true;
                 }
                 return false;
