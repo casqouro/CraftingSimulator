@@ -28,10 +28,12 @@ resource add it to the list.  When consuming a resource delete it from the list.
 Right now it's looping through and checking 100 things, 97 of which are empty!
 */
 
-public class CraftingSimulator extends ApplicationAdapter {
-        ShapeRenderer jack;	
+public class CraftingSimulator extends ApplicationAdapter {	
         SpriteBatch batch;   
         TextureRegion ham;
+        TextureRegion grass;
+        TextureRegion apple;
+        TextureRegion cheese;
         BitmapFont font;
         
         TextureAtlas hamAtlas;
@@ -53,15 +55,14 @@ public class CraftingSimulator extends ApplicationAdapter {
         Map currentMap;
         String direction;
         
-        boolean resourceInventoryState = true; // well, the values used when rendering would differ based on true/false
+        boolean resourceInventoryState = false;
         boolean inputLockedState = false;
         
 	@Override
 	public void create () {
             KeyProcessor processor = new KeyProcessor();
             Gdx.input.setInputProcessor(processor);
-           
-            jack = new ShapeRenderer();
+            
             batch = new SpriteBatch();   
             ham = new TextureRegion(new Texture(new FileHandle("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\ham (1).png")));
             font = new BitmapFont();
@@ -71,6 +72,9 @@ public class CraftingSimulator extends ApplicationAdapter {
             hamWalkUpAtlas = new TextureAtlas(Gdx.files.internal("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\hamwalkup.atlas"));            
             hamWalkUpAnim = new Animation(1/4f, hamWalkUpAtlas.getRegions());
             hamWalkUpAnim.setPlayMode(Animation.PlayMode.NORMAL);
+            grass = new TextureRegion(new Texture(new FileHandle("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\grass.png")));
+            apple = new TextureRegion(new Texture(new FileHandle("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\apple.png")));
+            cheese = new TextureRegion(new Texture(new FileHandle("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\cheese.png")));
             fieldSizeX = 10;
             fieldSizeY = 10;
             playerX = 5;
@@ -78,53 +82,34 @@ public class CraftingSimulator extends ApplicationAdapter {
             height = Gdx.graphics.getHeight();
             width = Gdx.graphics.getWidth();   
             heightSpacing = height / fieldSizeY;
-            widthSpacing = (width - 128) / fieldSizeX;
+            widthSpacing = width / fieldSizeX;
             inventorySizeOffset = 1;
             currentMap = new Map(fieldSizeX, fieldSizeY);
 	}
         
         private void drawResources() {
-            jack.begin(ShapeType.Filled);
+            int justify = (widthSpacing - apple.getRegionWidth()) / 2;
             for (int a = 0; a < fieldSizeX; a++) {
                 for (int b = 0; b < fieldSizeY; b++) {
                     if (currentMap.mapBoard[a][b] == 2) {
-                        jack.setColor(Color.GRAY);
-                        jack.rect(a * widthSpacing, b * heightSpacing, widthSpacing, heightSpacing);
+                        batch.draw(apple, (a * widthSpacing) + justify, b * heightSpacing);
                     }
                     if (currentMap.mapBoard[a][b] == 3) {
-                        jack.setColor(Color.BLUE);
-                        jack.rect(a * widthSpacing, b * heightSpacing, widthSpacing, heightSpacing);
+                        batch.draw(cheese, (a * widthSpacing) + justify, b * heightSpacing);
                     }
                 }
             }
-            jack.end();
         }
         
-        private void drawField() {
-            jack.begin(ShapeType.Line);
-            jack.setColor(Color.WHITE);
-            
-            // this draws the vertical lines
-            for (int col = 0; col < fieldSizeX; col++) {
-                jack.line((col * (width - (128 * inventorySizeOffset)))/fieldSizeX, 0, 
-                          (col * (width - (128 * inventorySizeOffset)))/fieldSizeX, height);
-            }
-            // this draws the horizontal lines
-            for (int row = 0; row < fieldSizeY; row++) {
-                jack.line(0, row * height/fieldSizeY,
-                          width - (129 * inventorySizeOffset), row * height/fieldSizeY); // 129, instead of 128?  Has to do with drawing the lines/resources.
-            }  
-            jack.end();            
-        }
-        
+        private void drawBackground() {
+            int size = fieldSizeX * fieldSizeY;
+            for (int a = 0; a < size; a++ ) {
+                batch.draw(grass, (a % fieldSizeX) * widthSpacing, (a / fieldSizeY) * heightSpacing, widthSpacing, heightSpacing);
+            }            
+        }        
+               
         public void drawResourceInterface() {
-            // 640 by 480
-            // so 140 by 480?
             if (resourceInventoryState) {
-                jack.begin(ShapeType.Line);
-                jack.setColor(Color.WHITE);
-                jack.line(511, 0, 511, 480); // When set to 512, instead of 511, there was a one pixel gap when drawing resources.  Why?
-                jack.end();
             }   
         }
             
@@ -142,27 +127,16 @@ public class CraftingSimulator extends ApplicationAdapter {
             }
         }
         
-        private void fieldResizeUtility() {
-            resourceInventoryState = !resourceInventoryState;
-            
-            if (resourceInventoryState) {
-                widthSpacing = (width - 128) / fieldSizeX;
-                inventorySizeOffset = 1;
-            } else {
-                widthSpacing = (width / fieldSizeX);
-                inventorySizeOffset = 0;
-            }
-        }
-        
 	@Override
 	public void render () {            
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT); 
             
-            drawResources();
-            drawResourceInterface();            
-            drawField();            
+            //drawResourceInterface();                        
             
             batch.begin();
+            drawBackground();
+            drawResources();
+            
                 if (inputLockedState) {  // (location * spacing) + (spacing * currentFrame / totalFrames)
                     TextureRegion temp;
                     float nextPosition;
@@ -230,7 +204,7 @@ public class CraftingSimulator extends ApplicationAdapter {
                     for (int a = 0; a < inventory.length; a++) {
                         font.draw(batch, "HEYA: " + inventory[a], 522, 48 * (a + 2));
                     }
-                }                
+                }  
             batch.end();
        
             if (currentMap.needToGenerateResource()) {
@@ -269,10 +243,8 @@ public class CraftingSimulator extends ApplicationAdapter {
                                 direction = "D"; }                                
                             break;
                         case Keys.I:
-                            fieldResizeUtility();
                             break;
                     }  
-                    //inputLockedState = true;
                     return true;
                 }
                 return false;
@@ -282,6 +254,21 @@ public class CraftingSimulator extends ApplicationAdapter {
 
 /* FEATURE REQUESTS...
     * Don't generate resource on current player location
+        ^<--- How should the Map class know where the player is?  Every time
+                generateResources() is called, should it pass (x, y)?  Or maybe
+                it should take an array of (x, y) so that multiple no-generate
+                positions could be passed?
+
+                For efficiency, instead of brute-forcing the location of 
+                resources (100 spaces, 20 are no-resource spaces, you keep
+                randomly trying to place resources...could be bad?) I could map
+                overall map array to a smaller array of open spaces, randomly
+                choose among them, then pass the value into the map array.
+
+    * Inventory screen.
+        a) Static, doesn't move
+        b) Toggle-able with 'I' key
+        c) Appearance?  Textures + Background?  How to write text?
 */
 
 /* UPGRADES
