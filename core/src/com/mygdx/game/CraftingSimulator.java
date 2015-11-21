@@ -5,17 +5,13 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 
 // investigate disabling continuous rendering
 // investigate game loops
@@ -119,7 +115,6 @@ public class CraftingSimulator extends ApplicationAdapter {
             
             int locationValue = currentMap.mapBoard[playerX][playerY];
             
-            // if the player is implemented with this array, setting it to 0 could be bad!)
             if (locationValue != 0) {
                 inventory[locationValue] += 1;
                 currentMap.setHarvested(1);
@@ -132,7 +127,6 @@ public class CraftingSimulator extends ApplicationAdapter {
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT); 
             
             //drawResourceInterface();                        
-            
             batch.begin();
             drawBackground();
             drawResources();
@@ -213,7 +207,7 @@ public class CraftingSimulator extends ApplicationAdapter {
 	}
         
         private class KeyProcessor extends InputAdapter {
-            
+
             @Override
             public boolean keyDown(int keycode) {
                 if (!inputLockedState) {
@@ -243,6 +237,7 @@ public class CraftingSimulator extends ApplicationAdapter {
                                 direction = "D"; }                                
                             break;
                         case Keys.I:
+                            resourceInventoryState = !resourceInventoryState;
                             break;
                     }  
                     return true;
@@ -269,6 +264,31 @@ public class CraftingSimulator extends ApplicationAdapter {
         a) Static, doesn't move
         b) Toggle-able with 'I' key
         c) Appearance?  Textures + Background?  How to write text?
+
+    * Movement tweaks:
+        "A" is actually a significant change, definitely positive as it'll 
+        require, perhaps, a more mature approach to handling movement.
+
+        Read here: https://github.com/libgdx/libgdx/wiki/Event-handling
+
+        The rough idea:
+        Create a boolean flag for each direction
+        On KeyDown set that flag to true
+        On KeyUp set that flag to false
+        When KeyDown is true, you get your delta time and do your animating.
+
+        Right now I'm using a simple grid, and reconciling the grid with the
+        level of movement finesse I want is the problem, I think.  This will be
+        a step forward so that in future projects I should be comfortable with
+        moving a sprite around fluidly, rather than stepping from grid to grid
+        while running an animation.
+
+        a) Holding a key down should continue input
+        b) Movement queue, so input receiving WHILE moving is then processed?
+        c) Reversing movement WHILE movement is in process.  If you press right
+            and the animation is playing, pressing left during the animation
+            should immediately turn the character around and head him the other
+            direction.
 */
 
 /* UPGRADES
