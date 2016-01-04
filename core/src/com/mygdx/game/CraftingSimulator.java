@@ -12,7 +12,17 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import java.awt.Point;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.Window;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 
 // investigate disabling continuous rendering
 // investigate game loops
@@ -27,116 +37,71 @@ import java.awt.Point;
 public class CraftingSimulator extends ApplicationAdapter {
 
     SpriteBatch batch;
-    TextureRegion ham;
-    TextureRegion wall;
-    TextureRegion ore;
-    TextureRegion grass;
-    TextureRegion apple;
-    TextureRegion cheese;
-    BitmapFont font;
+    GameBoard test;
 
-    TextureAtlas hamAtlas;
-    Animation hamAnim;
-    TextureAtlas hamWalkUpAtlas;
-    Animation hamWalkUpAnim;
     private float elapsedTime = 0;
-
-    int fieldSizeX;
-    int fieldSizeY;
-    int[] inventory = new int[5];
     int playerX;
     int playerY;
-    int height;
-    int width;
-    int heightSpacing;
-    int widthSpacing;
     
-    int movementSpeed;
-    int inventorySizeOffset;
     Map currentMap;
-    Entity[] colliders;
-    Entity hamEntity;
-    Entity wallEntity;
 
+    boolean moveUp;
+    boolean moveLeft;
+    boolean moveDown;
+    boolean moveRight;
+    
     int xChange = 0;
     int yChange = 0;
-    
-    int xCollisionModifier = 1;
-    int yCollisionModifier = 1;
+
+    MiningGame one;
 
     @Override
-    public void create() {
+    public void create() {                  
         KeyProcessor processor = new KeyProcessor();
-        Gdx.input.setInputProcessor(processor);
+        //Gdx.input.setInputProcessor(processor);
+        //Gdx.input.setInputProcessor(stage);
 
         batch = new SpriteBatch();
-        ham = new TextureRegion(new Texture(new FileHandle("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\ham (1).png")));
-        wall = new TextureRegion(new Texture(new FileHandle("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\wall.png")));
-        ore = new TextureRegion(new Texture(new FileHandle("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ore\\orangeOre.png")));
-        font = new BitmapFont();
-        hamAtlas = new TextureAtlas(Gdx.files.internal("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\hamswalk.atlas"));
-        hamAnim = new Animation(1 / 6f, hamAtlas.getRegions());
-        hamAnim.setPlayMode(Animation.PlayMode.LOOP);
-        hamWalkUpAtlas = new TextureAtlas(Gdx.files.internal("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\hamwalkup.atlas"));
-        hamWalkUpAnim = new Animation(1 / 4f, hamWalkUpAtlas.getRegions());
-        hamWalkUpAnim.setPlayMode(Animation.PlayMode.LOOP);
-        grass = new TextureRegion(new Texture(new FileHandle("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\grass.png")));
-        apple = new TextureRegion(new Texture(new FileHandle("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\apple.png")));
-        cheese = new TextureRegion(new Texture(new FileHandle("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\cheese.png")));
-        fieldSizeX = 10;
-        fieldSizeY = 10;
+        test = new GameBoard(batch, 10, 10);        
         playerX = 250;
         playerY = 250;
-        height = Gdx.graphics.getHeight();
-        width = Gdx.graphics.getWidth();
-        heightSpacing = height / fieldSizeY;
-        widthSpacing = width / fieldSizeX;
-        movementSpeed = 3;
-        inventorySizeOffset = 1;
-        currentMap = new Map(fieldSizeX, fieldSizeY);
-        colliders = new Entity[5]; // wouldn't this need to be dynamic?
-        
-        hamEntity = new Entity(ham, 200, 200, 50, 50);
-        wallEntity = new Entity(wall, 100, 100, 50, 50);
-        colliders[0] = hamEntity;
-        colliders[1] = wallEntity;
-    }
 
-    private void drawResources() {
-        int justify = (widthSpacing - apple.getRegionWidth()) / 2;
-        for (int a = 0; a < fieldSizeX; a++) {
-            for (int b = 0; b < fieldSizeY; b++) {
-                if (currentMap.mapBoard[a][b] == 2) {
-                    batch.draw(apple, (a * widthSpacing) + justify, b * heightSpacing);
-                }
-                if (currentMap.mapBoard[a][b] == 3) {
-                    batch.draw(cheese, (a * widthSpacing) + justify, b * heightSpacing);
-                }
-            }
-        }
-    }
-
-    private void drawBounds() {
-        for (int a = 0; a < fieldSizeX; a++) {
-            batch.draw(wall, (a % fieldSizeX) * widthSpacing, height - heightSpacing, widthSpacing, heightSpacing);
-            batch.draw(wall, (a % fieldSizeX) * widthSpacing, 0, widthSpacing, heightSpacing);              
-        }
+        one = new MiningGame();
+        Gdx.input.setInputProcessor(one.getStage());
         
-        for (int a = 0; a < fieldSizeY; a++) {
-            batch.draw(wall, width - widthSpacing, (a % fieldSizeY) * heightSpacing, widthSpacing, heightSpacing);
-            batch.draw(wall, 0, (a % fieldSizeY) * heightSpacing, widthSpacing, heightSpacing);              
-        }   
+        /* Okay...so...
         
-        wallEntity.drawEntity(batch);
+        1) Drawables for cells need to be the same size, otherwise sizing them
+            correctly will become a nightmare.
+        
+        2) The Table background will bleed through each button's image unless
+            a background is set for each button.  The caveat is that a final
+            graphic for the button should have no gaps for bleedthrough.
+        
+        Window is a subclass of Table and includes a header which I don't need,
+        so use Table.
+        
+        Table documentation: https://github.com/libgdx/libgdx/wiki/Table
+        
+        */
     }
     
-    private void drawBackground() {
-        int size = fieldSizeX * fieldSizeY;
-        for (int a = 0; a < size; a++) {
-            batch.draw(grass, (a % fieldSizeX) * widthSpacing, (a / fieldSizeY) * heightSpacing, widthSpacing, heightSpacing);
-        }
-    }
+    @Override
+    public void render() {
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+        batch.begin();
+        
+        test.drawGameBoard();
+        //animatePlayer();
+        
+        one.getStage().draw();
+        one.getStage().act();
+  
+        batch.end();
+    }    
+
+    /*
     private TextureRegion orientKeyFrame() {
         elapsedTime += Gdx.graphics.getDeltaTime();
         TextureRegion temp = hamAnim.getKeyFrame(elapsedTime);
@@ -184,81 +149,86 @@ public class CraftingSimulator extends ApplicationAdapter {
         if (yChange > 0) {
             return hamWalkUpAnim.getKeyFrame(elapsedTime);
         }
-
         return ham;
     }
-
+    
     private void animatePlayer() {
-        /* this works, but is sticky
-        if (xChange != 0 || yChange != 0) {          
-            if (!detectCollision(hamEntity, wallEntity)) {
-                hamEntity.x += xChange;
-                hamEntity.y += yChange;
-            }
-        }        
-        batch.draw(orientKeyFrame(), hamEntity.x, hamEntity.y, 50, 50);
-        */
+        calculateMovementSpeed();
         
-        checkCollision(hamEntity, wallEntity);
-        hamEntity.x += xChange * xCollisionModifier;
-        hamEntity.y += yChange * yCollisionModifier;
-        xCollisionModifier = 1;
-        yCollisionModifier = 1;        
+        if (isCollision(hamEntity, wallEntity)) {    
+            modifyMovement();  
+        }
+        
+        hamEntity.x += xChange;
+        hamEntity.y += yChange;
+
         batch.draw(orientKeyFrame(), hamEntity.x, hamEntity.y, 50, 50);        
     }
     
-    // I have no idea why a second button down makes you stick.
-    private void checkCollision(Entity a, Entity b) {
-        if (a.x + a.width + xChange > b.x && a.x + xChange < b.x + b.width) {
-            if (a.y + a.height + yChange > b.y && a.y + yChange < b.y + b.height) {
-
-                if (a.x + a.width + xChange > b.x) {
-                    xCollisionModifier = 0;
-                }
-                
-                if (a.x + xChange < b.x + b.width) {
-                    xCollisionModifier = 0;                    
-                }
-                
-                if (a.y + a.height + yChange > b.y) {
-                    yCollisionModifier = 0;
-                }
-                
-                if (a.y + yChange < b.y + b.height) {
-                    yCollisionModifier = 0;
-                }
-            }
+    // the "move" booleans should only be changed on keyDown / keyUp!
+    private void calculateMovementSpeed() {
+        xChange = 0;
+        yChange = 0;
+        
+        if (moveUp) {
+            yChange += 3;
         }
-    }
-    
-    private boolean detectCollision(Entity a, Entity b) { 
-        // The arbitrary offsets are due to the Ham character sprite not having flush borders.
-        if (a.x + a.width + xChange - 17 > b.x && a.y + a.height + yChange - 30 > b.y) {
-            if (a.x + xChange + 17 < b.x + b.width && a.y + yChange + 2 < b.y + b.height) {
+        
+        if (moveLeft) {
+            xChange -= 3;
+        }
+        
+        if (moveDown) {
+            yChange -= 3;
+        }
+        
+        if (moveRight) {
+            xChange += 3;
+        }
+    }    
+        
+    private boolean isCollision(Entity a, Entity b) {
+        if (a.x + a.width + xChange - 17 >= b.x && a.x + xChange + 17 <= b.x + b.width) {
+            if (a.y + a.height + yChange - 45 >= b.y && a.y + yChange + 2 <= b.y + b.height) {
                 return true;
             }
-        }        
-        return false;
-    }
-
-    @Override
-    public void render() {
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
-        batch.begin();
-        
-        drawBackground();
-        drawBounds();
-        //batch.draw(ore, 100, 100);        
-        animatePlayer();
-        
-        batch.end();
-
-        if (currentMap.needToGenerateResource()) {
-            currentMap.generateResources();
         }
-    }
-
+        return false;
+    }    
+    
+    private void modifyMovement() {
+    // (X-17) (X+17) (Y-45) (Y+2) --- ham sprite offsets  
+        
+        if (hamEntity.x + hamEntity.width - 17 < wallEntity.x &&
+            hamEntity.x + hamEntity.width + xChange - 17 >= wallEntity.x) {
+            xChange = 0;
+        }
+        
+        if (hamEntity.x + 17 > wallEntity.x + wallEntity.width &&
+            hamEntity.x + xChange + 17 <= wallEntity.x + wallEntity.width) {
+            xChange = 0;
+        }
+        
+        if (hamEntity.y + hamEntity.height - 45 < wallEntity.y  &&
+            hamEntity.y + hamEntity.height + yChange - 45 >= wallEntity.y) {
+            yChange = 0;
+        }
+        
+        if (hamEntity.y + 2 > wallEntity.y + wallEntity.height &&
+            hamEntity.y + yChange + 2 <= wallEntity.y + wallEntity.height) {
+            yChange = 0;
+        }               
+    }    
+    */
+    
+    /* This cannot be a simple numerical addition/subtraction because I need to
+        be able to check if keyDown is happening.
+    
+        If a keyDown EVENT adds +5 to movement, and collision subtracts 5 from
+        movement, the net sum is 0.  But if collision ends the net sum is STILL
+        0, even though the keyDown event has not been terminated.  That means
+        the intent is for the character to still be at +5, and still be moving.
+    */
     private class KeyProcessor extends InputAdapter {
 
         @Override
@@ -266,19 +236,19 @@ public class CraftingSimulator extends ApplicationAdapter {
             switch (keycode) {
                 case Keys.W:
                 case Keys.UP:
-                    yChange += movementSpeed;
+                    moveUp = true;
                     break;
                 case Keys.A:
                 case Keys.LEFT:
-                    xChange += -movementSpeed;
+                    moveLeft = true;
                     break;
                 case Keys.S:
                 case Keys.DOWN:
-                    yChange += -movementSpeed;
+                    moveDown = true;
                     break;
                 case Keys.D:
                 case Keys.RIGHT:
-                    xChange += movementSpeed;
+                    moveRight = true;
                     break;
             }
 
@@ -290,48 +260,25 @@ public class CraftingSimulator extends ApplicationAdapter {
             switch (keycode) {
                 case Keys.W:
                 case Keys.UP:
-                    yChange += -movementSpeed;
+                    moveUp = false;
                     break;
                 case Keys.A:
                 case Keys.LEFT:
-                    xChange += movementSpeed;
+                    moveLeft = false;
                     break;
                 case Keys.S:
                 case Keys.DOWN:
-                    yChange += movementSpeed;
+                    moveDown = false;
                     break;
                 case Keys.D:
                 case Keys.RIGHT:
-                    xChange += -movementSpeed;
+                    moveRight = false;
                     break;
             }
             return true;
         }
     }
 }
-/* FEATURE REQUESTS...
- * Don't generate resource on current player location
- ^<--- How should the Map class know where the player is?  Every time
- generateResources() is called, should it pass (x, y)?  Or maybe
- it should take an array of (x, y) so that multiple no-generate
- positions could be passed?
-
- For efficiency, instead of brute-forcing the location of 
- resources (100 spaces, 20 are no-resource spaces, you keep
- randomly trying to place resources...could be bad?) I could map
- overall map array to a smaller array of open spaces, randomly
- choose among them, then pass the value into the map array.
-
-*/
-
-/* THINGS TO DO:
-    Non-sticky collision.  If you hold two directions, such as up-and-left, and
-    collision for "up" is triggered, no movement occurs.  The left movement
-    should still happen if there's no collision there.
-
-    Collision currently stops ALL movement via a boolean.  In the future
-    collision could simply zero out the change found in the directio of collision.
- */
 
 /* Lessons Learned
 
@@ -349,6 +296,10 @@ public class CraftingSimulator extends ApplicationAdapter {
 
         tr.flip(true, false)
         tr.flip(true, false) is a full set of flips, back to the original.
+
+    3) stage.act() fires Enter/Exit events, such as those used for hovering over
+        a button.  If you don't call stage.act(), a button will change its
+        appearance when clicked, but not when hovering over.
 
    JAVA:
     1) float x = int a / int b ---> returns 0.  You must explicitly cast that
@@ -428,4 +379,25 @@ public class CraftingSimulator extends ApplicationAdapter {
         It could also get complex quick in a game with a z-axis to consider,
         and, if implemented poorly, could make things worse by facilitating
         exploits.
+*/
+
+/* deprecated
+    // maybe it should be "if the current position doesn't work...don't do this"
+    private void one(Entity a, Entity b) {
+        if (a.x + xChange >= b.x && a.x + xChange <= b.x + b.width ||
+            a.x + a.width + xChange >= b.x && a.x + a.width + xChange <= b.x + b.width) {
+            
+            if (a.y + a.height + yChange >= b.y && a.y + yChange <= b.y + b.height) {
+                yChange = 0;
+            }
+        }
+        
+        if (a.y + yChange >= b.y && a.y + yChange <= b.y + b.height ||
+            a.y + a.height + yChange >= b.y && a.y + a.height + yChange <= b.y + b.height) {
+            
+            if (a.x + a.width + xChange >= b.x && a.x + xChange <= b.x + b.width) {
+                xChange = 0;
+            }
+        }
+    }
 */
