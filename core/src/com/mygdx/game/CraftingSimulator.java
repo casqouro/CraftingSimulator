@@ -4,28 +4,15 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputAdapter;
-import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Animation;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Button;
-import com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.Window;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
-import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 
 // investigate disabling continuous rendering
 // investigate game loops
+
+/* resizing the window manually should be disabled
+   resizing the window manually fucks up the input...will that happen with a menu option for resizing?
+*/
 
 /*  Looping through an array to draw stuff is wasteful.  Have resources exist as
  objects which maintain their color and location.  Use a linked list to track 
@@ -38,12 +25,11 @@ public class CraftingSimulator extends ApplicationAdapter {
 
     SpriteBatch batch;
     GameBoard test;
+    MiningGame one;    
 
     private float elapsedTime = 0;
     int playerX;
     int playerY;
-    
-    Map currentMap;
 
     boolean moveUp;
     boolean moveLeft;
@@ -52,8 +38,6 @@ public class CraftingSimulator extends ApplicationAdapter {
     
     int xChange = 0;
     int yChange = 0;
-
-    MiningGame one;
 
     @Override
     public void create() {                  
@@ -66,7 +50,7 @@ public class CraftingSimulator extends ApplicationAdapter {
         playerX = 250;
         playerY = 250;
 
-        one = new MiningGame();
+        one = new MiningGame(batch, 5);
         Gdx.input.setInputProcessor(one.getStage());
         
         /* Okay...so...
@@ -89,16 +73,66 @@ public class CraftingSimulator extends ApplicationAdapter {
     @Override
     public void render() {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
+                           
         batch.begin();
         
         test.drawGameBoard();
         //animatePlayer();
-        
-        one.getStage().draw();
-        one.getStage().act();
-  
+               
         batch.end();
+        
+        one.getStage().act();        
+        one.getStage().draw();         
+    }    
+    
+    private class KeyProcessor extends InputAdapter {
+
+        @Override
+        public boolean keyDown(int keycode) {
+            switch (keycode) {
+                case Keys.W:
+                case Keys.UP:
+                    moveUp = true;
+                    break;
+                case Keys.A:
+                case Keys.LEFT:
+                    moveLeft = true;
+                    break;
+                case Keys.S:
+                case Keys.DOWN:
+                    moveDown = true;
+                    break;
+                case Keys.D:
+                case Keys.RIGHT:
+                    moveRight = true;
+                    break;
+            }
+
+            return true;
+        }
+
+        @Override
+        public boolean keyUp(int keycode) {
+            switch (keycode) {
+                case Keys.W:
+                case Keys.UP:
+                    moveUp = false;
+                    break;
+                case Keys.A:
+                case Keys.LEFT:
+                    moveLeft = false;
+                    break;
+                case Keys.S:
+                case Keys.DOWN:
+                    moveDown = false;
+                    break;
+                case Keys.D:
+                case Keys.RIGHT:
+                    moveRight = false;
+                    break;
+            }
+            return true;
+        }
     }    
 
     /*
@@ -229,55 +263,6 @@ public class CraftingSimulator extends ApplicationAdapter {
         0, even though the keyDown event has not been terminated.  That means
         the intent is for the character to still be at +5, and still be moving.
     */
-    private class KeyProcessor extends InputAdapter {
-
-        @Override
-        public boolean keyDown(int keycode) {
-            switch (keycode) {
-                case Keys.W:
-                case Keys.UP:
-                    moveUp = true;
-                    break;
-                case Keys.A:
-                case Keys.LEFT:
-                    moveLeft = true;
-                    break;
-                case Keys.S:
-                case Keys.DOWN:
-                    moveDown = true;
-                    break;
-                case Keys.D:
-                case Keys.RIGHT:
-                    moveRight = true;
-                    break;
-            }
-
-            return true;
-        }
-
-        @Override
-        public boolean keyUp(int keycode) {
-            switch (keycode) {
-                case Keys.W:
-                case Keys.UP:
-                    moveUp = false;
-                    break;
-                case Keys.A:
-                case Keys.LEFT:
-                    moveLeft = false;
-                    break;
-                case Keys.S:
-                case Keys.DOWN:
-                    moveDown = false;
-                    break;
-                case Keys.D:
-                case Keys.RIGHT:
-                    moveRight = false;
-                    break;
-            }
-            return true;
-        }
-    }
 }
 
 /* Lessons Learned
@@ -300,6 +285,12 @@ public class CraftingSimulator extends ApplicationAdapter {
     3) stage.act() fires Enter/Exit events, such as those used for hovering over
         a button.  If you don't call stage.act(), a button will change its
         appearance when clicked, but not when hovering over.
+
+    4) For resizing a component in a layout (button on a table on a stage) you
+        need to set any TWO OR MORE of min/max/pref.  Setting just one lets the
+        actor fill.  It might bear a little investigating into the source.
+
+        Note: using .size() is an easy way to set all three at once.
 
    JAVA:
     1) float x = int a / int b ---> returns 0.  You must explicitly cast that
