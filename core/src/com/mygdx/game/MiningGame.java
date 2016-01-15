@@ -28,7 +28,7 @@ public class MiningGame {
     private final int prefW = 30;
     private final int prefH = 30;  
     private final int boardSize;
-    private final int depth = 3;
+    private final int depth = 2;
     
 /* DEPTH:
    Use a darker mask on each successive layer to portray depth?
@@ -63,17 +63,11 @@ public class MiningGame {
         a.newButton.setWidth(prefW);
         a.newButton.setHeight(prefW);
         
-        /*  The original code:
-            a.newButton.setPosition((index % boardSize) * prefW, (index / boardSize) * prefH); 
-        
-            The above draws a single layer.  The updated code draws multiple
-            layers, one on top of the other.   
-        */
-        
-        // Do I care that the end of the array is drawing on top of the front?
+        // Displays the array as a series of layers
+        // Ex: 75 blocks becomes 3 5x5 layers
         int layerIndex = index % (boardSize * boardSize);
-        int xLoc = (layerIndex % boardSize * prefW) + 100;
-        int yLoc = (layerIndex / boardSize * prefH) + 100;
+        int xLoc = (layerIndex % boardSize * prefW);// + 100;
+        int yLoc = (layerIndex / boardSize * prefH);// + 100;
         
         a.newButton.setPosition(xLoc, yLoc);
         
@@ -87,12 +81,13 @@ public class MiningGame {
         
         a = new Button(new ButtonStyle(null, null, null));
         
-        String color = "";
-        String color_active = "";
+        String color = "dirt_4";
+        String color_active = "dirt_4";
         
         Random rand = new Random();
         int num = rand.nextInt(3);
         
+        /*
         if (num == 0) {
             color = "blue";
             color_active = "blue_active";
@@ -107,7 +102,7 @@ public class MiningGame {
             color = "green";
             color_active = "green_active";
         }
-                                        
+        */                                
         a.getStyle().up = new TextureRegionDrawable(
                             new TextureRegion(
                             new Texture(
@@ -133,13 +128,17 @@ public class MiningGame {
         
         @Override
         public void clicked(InputEvent event, float x, float y) {  
-            System.out.println(c.index);
-            c.newButton.remove();
+            System.out.println(c.index);            
+            c.health -= 1;                       
             
-            //buttonBoard[c.index] = createCompanion(c.index);
+            if (c.health > 0) {
+                c.newButton.getStyle().up = new TextureRegionDrawable(
+                                            new TextureRegion(
+                                            new Texture(
+                                            new FileHandle("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\squares\\dirt_" + c.health +".png"))));
+            } else {
+                c.newButton.remove();
+            }
         }
     }    
 }
-
-// actionListener goes in MiningGame so I can directly reference the array
-// 

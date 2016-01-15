@@ -6,6 +6,9 @@ import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 // investigate disabling continuous rendering
 // investigate game loops
@@ -13,19 +16,12 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 /* resizing the window manually should be disabled
    resizing the window manually fucks up the input...will that happen with a menu option for resizing?
 */
-
-/*  Looping through an array to draw stuff is wasteful.  Have resources exist as
- objects which maintain their color and location.  Use a linked list to track 
- every object, with the first entry always being the player.  When generating a
- resource add it to the list.  When consuming a resource delete it from the list.
-
- Right now it's looping through and checking 100 things, 97 of which are empty!
- */
 public class CraftingSimulator extends ApplicationAdapter {
 
     SpriteBatch batch;
     GameBoard test;
-    MiningGame one;    
+    PixelMiningGame one; 
+    SiftingGame sifting;
 
     private float elapsedTime = 0;
     int playerX;
@@ -43,46 +39,30 @@ public class CraftingSimulator extends ApplicationAdapter {
     public void create() {                  
         KeyProcessor processor = new KeyProcessor();
         //Gdx.input.setInputProcessor(processor);
-        //Gdx.input.setInputProcessor(stage);
 
         batch = new SpriteBatch();
         test = new GameBoard(batch, 10, 10);        
         playerX = 250;
         playerY = 250;
 
-        one = new MiningGame(batch, 5);
-        Gdx.input.setInputProcessor(one.getStage());
-        
-        /* Okay...so...
-        
-        1) Drawables for cells need to be the same size, otherwise sizing them
-            correctly will become a nightmare.
-        
-        2) The Table background will bleed through each button's image unless
-            a background is set for each button.  The caveat is that a final
-            graphic for the button should have no gaps for bleedthrough.
-        
-        Window is a subclass of Table and includes a header which I don't need,
-        so use Table.
-        
-        Table documentation: https://github.com/libgdx/libgdx/wiki/Table
-        
-        */
+        one = new PixelMiningGame(batch, 5);
+        try {
+            sifting = new SiftingGame(batch);
+        } catch (IOException ex) {
+            Logger.getLogger(CraftingSimulator.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        Gdx.input.setInputProcessor(sifting.getStage());
     }
     
     @Override
     public void render() {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
                            
-        batch.begin();
-        
-        test.drawGameBoard();
-        //animatePlayer();
-               
+        batch.begin();            
         batch.end();
         
-        one.getStage().act();        
-        one.getStage().draw();         
+        sifting.getStage().act();        
+        sifting.getStage().draw();         
     }    
     
     private class KeyProcessor extends InputAdapter {
@@ -135,6 +115,7 @@ public class CraftingSimulator extends ApplicationAdapter {
         }
     }    
 
+    private void deprecated () {
     /*
     private TextureRegion orientKeyFrame() {
         elapsedTime += Gdx.graphics.getDeltaTime();
@@ -263,6 +244,7 @@ public class CraftingSimulator extends ApplicationAdapter {
         0, even though the keyDown event has not been terminated.  That means
         the intent is for the character to still be at +5, and still be moving.
     */
+    }
 }
 
 /* Lessons Learned
