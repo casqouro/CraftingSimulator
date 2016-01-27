@@ -15,7 +15,6 @@ import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
@@ -31,6 +30,10 @@ public class SiftingGame {
     
     private final int prefW = 30;
     private final int prefH = 30;    
+    
+    // The button's style, determined by "priority" (right now), won't change when the button is moved.
+    // Each node draws the button it currently holds at its x/y, so it'll have to call setPosition
+    // When the game is updated each node will pass its button
     
     public SiftingGame(SpriteBatch batch) throws IOException {
         camera = new OrthographicCamera();
@@ -66,6 +69,8 @@ public class SiftingGame {
             int x = Integer.parseInt(token[1]);
             int y = Integer.parseInt(token[2]);
             int priority = Integer.parseInt(token[3]);
+            int xShift = Integer.parseInt(token[4]);
+            int yShift = Integer.parseInt(token[5]);
             
             Button button = new Button(new Button.ButtonStyle(null, null, null));
             
@@ -90,6 +95,14 @@ public class SiftingGame {
                         
             gameStage.addActor(node.nodeButton);
             line = br.readLine();
+        }
+    }
+    
+    private void update() {
+        Button transfer;
+        
+        for (int a = 0; a < nodes.length; a++) {
+            transfer = nodes[a].nodeButton;
         }
     }
     
