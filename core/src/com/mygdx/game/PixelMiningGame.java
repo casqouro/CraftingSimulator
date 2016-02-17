@@ -12,7 +12,6 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScalingViewport;
@@ -37,7 +36,7 @@ public class PixelMiningGame {
         boardSize = buttonBoardSize;  
         
         pixmap = new Pixmap(
-                 new FileHandle("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\squares\\blue_active.png"));  
+                 new FileHandle("..\\assets\\squares\\blue_active.png"));  
         texture = new Texture(pixmap);
         image = new Image(texture);
         

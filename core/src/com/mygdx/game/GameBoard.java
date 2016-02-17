@@ -51,19 +51,19 @@ public class GameBoard {
         mapSizeY = 10;
         mapBoard = new int[mapSizeX][mapSizeY];        
         
-        ham = new TextureRegion(new Texture(new FileHandle("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\ham (1).png")));
-        wall = new TextureRegion(new Texture(new FileHandle("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\wall.png")));
-        ore = new TextureRegion(new Texture(new FileHandle("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ore\\orangeOre.png")));
-        grass = new TextureRegion(new Texture(new FileHandle("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\grass.png")));
-        apple = new TextureRegion(new Texture(new FileHandle("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\apple.png")));
-        cheese = new TextureRegion(new Texture(new FileHandle("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\cheese.png")));
-        mask = new TextureRegion(new Texture(new FileHandle("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\mask_640_480.png")));        
+        ham = new TextureRegion(new Texture(new FileHandle("..\\assets\\ham\\ham (1).png")));
+        wall = new TextureRegion(new Texture(new FileHandle("..\\assets\\ham\\wall.png")));
+        ore = new TextureRegion(new Texture(new FileHandle("..\\assets\\ore\\orangeOre.png")));
+        grass = new TextureRegion(new Texture(new FileHandle("..\\assets\\ham\\grass.png")));
+        apple = new TextureRegion(new Texture(new FileHandle("..\\assets\\ham\\apple.png")));
+        cheese = new TextureRegion(new Texture(new FileHandle("..\\assets\\ham\\cheese.png")));
+        mask = new TextureRegion(new Texture(new FileHandle("..\\assets\\ham\\mask_640_480.png")));        
         
-        hamAtlas = new TextureAtlas(Gdx.files.internal("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\hamswalk.atlas"));
+        hamAtlas = new TextureAtlas(Gdx.files.internal("..\\assets\\ham\\hamswalk.atlas"));
         hamAnim = new Animation(1 / 6f, hamAtlas.getRegions());
         hamAnim.setPlayMode(Animation.PlayMode.LOOP);
         
-        hamWalkUpAtlas = new TextureAtlas(Gdx.files.internal("C:\\Users\\Matthew\\Desktop\\CraftingSimulator\\assets\\ham\\hamwalkup.atlas"));
+        hamWalkUpAtlas = new TextureAtlas(Gdx.files.internal("..\\assets\\ham\\hamwalkup.atlas"));
         hamWalkUpAnim = new Animation(1 / 4f, hamWalkUpAtlas.getRegions());
         hamWalkUpAnim.setPlayMode(Animation.PlayMode.LOOP);  
         
