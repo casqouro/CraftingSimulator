@@ -43,4 +43,8 @@ public class Entity {
     public void setAppearance(TextureRegion newAppearance) {
         appearance = newAppearance;
     }
+    
+    public TextureRegion getAppearance() {
+        return appearance;
+    }
 }
